@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using HidLibrary;
 
-namespace LewanSoul_xArm
+namespace TestConsole.USB
 {
     class Program
     {
