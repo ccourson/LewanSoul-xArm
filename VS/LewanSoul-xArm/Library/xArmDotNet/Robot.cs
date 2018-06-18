@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Runtime.InteropServices;
 using HidLibrary;
 
 namespace xArmDotNet
@@ -15,42 +14,91 @@ namespace xArmDotNet
 
         private static HidDevice _device;
 
-        public bool IsConnected { get; set; }
+        public bool IsConnected => _device==null ? false : _device.IsConnected;
+        public static class Servo
+        {
+            
+        }
 
+        public void Initialize()
+        {
+
+        }
+
+        /// <summary>
+        /// Connect to xArm.
+        /// </summary>
+        /// <returns>True if connection succeeded.</returns>
         public bool Connect()
         {
-            IsConnected = false;
             _device = HidDevices.Enumerate(VendorId, ProductId).FirstOrDefault();
 
-            if (_device != null)
+            if (_device != null) // xArm found.
             {
-                IsConnected = true;
 
                 _device.Inserted += DeviceAttachedHandler;
                 _device.Removed += DeviceRemovedHandler;
 
                 _device.MonitorDeviceEvents = true;
 
-                _device.ReadReport(OnReport);
+                DeviceAttached?.Invoke(this, null);
             }
             return IsConnected;
         }
 
-        private const int WM_DEVICECHANGE = 0x0219;                 // device change event 
-        private const int DBT_DEVICEARRIVAL = 0x8000;               // system detected a new device 
-        private const int DBT_DEVICEREMOVEPENDING = 0x8003;         // about to remove, still available 
-        private const int DBT_DEVICEREMOVECOMPLETE = 0x8004;        // device is gone 
-
-        protected override void WndProc(ref Message m)
+        /// <summary>
+        /// Event handler for API hook into USB report received.
+        /// </summary>
+        public event EventHandler<ReportReceivedEventArgs> ReportReceived;
+        /// <summary>
+        /// Called when USB report received.
+        /// </summary>
+        /// <param name="report"></param>
+        private void OnReport(HidReport report)
         {
-            if ()
+            ReportReceived?.Invoke(this, new ReportReceivedEventArgs()
             {
+                ReportId = report.ReportId,
+                Data = report.Data,
+                ReadStatus = (ReadStatus)report.ReadStatus
+            });
 
-            }
+            _device.ReadReport(OnReport); // Resubscribe to event.
+        }
 
-            base.WndProc(ref m);
+        public event EventHandler DeviceRemoved;
 
+        private void DeviceRemovedHandler()
+        {
+            DeviceRemoved?.Invoke(this, null);
+            _device.Dispose();
+        }
 
+        public event EventHandler DeviceAttached;
+
+        private void DeviceAttachedHandler()
+        {
+            _device.ReadReport(OnReport);
+        }
+
+        /// <summary>
+        /// Inherit HidDeviceData.ReadStatus.
+        /// </summary>
+        public enum ReadStatus
+        {
+            NoDataRead = HidDeviceData.ReadStatus.NoDataRead,
+            NotConnected = HidDeviceData.ReadStatus.NotConnected,
+            ReadError = HidDeviceData.ReadStatus.ReadError,
+            Success = HidDeviceData.ReadStatus.Success,
+            WaitFail = HidDeviceData.ReadStatus.WaitFail,
+            WaitTimedOut = HidDeviceData.ReadStatus.WaitTimedOut
+        }
+
+        public class ReportReceivedEventArgs
+        {
+            public uint ReportId;
+            public ReadStatus ReadStatus;
+            public byte[] Data;
         }
     }
 }

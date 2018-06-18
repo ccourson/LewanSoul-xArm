@@ -63,7 +63,7 @@ namespace TestConsole.Bluetooth
 
                 var device = await BluetoothLEDevice.FromIdAsync(args.Id);
                 var services = await device.GetGattServicesAsync();
-                services.Services.
+
                 foreach (var service in services.Services)
                 {
                     Debug.WriteLine($"Service: {service.Uuid}");
