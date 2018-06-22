@@ -90,5 +90,23 @@ namespace xArmUSBConsole
                 info.Text = "HID device not found";
             }
         }
+
+        // Causes info TextBox to scroll to bottom when updated.
+        private void Info_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var grid = (Grid)VisualTreeHelper.GetChild(info, 0);
+            for (var i = 0; i <= VisualTreeHelper.GetChildrenCount(grid) - 1; i++)
+            {
+                object obj = VisualTreeHelper.GetChild(grid, i);
+                if (!(obj is ScrollViewer)) continue;
+                ((ScrollViewer)obj).ChangeView(0.0f, ((ScrollViewer)obj).ExtentHeight, 1.0f);
+                break;
+            }
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
