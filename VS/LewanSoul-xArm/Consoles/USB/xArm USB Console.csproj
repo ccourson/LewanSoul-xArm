@@ -135,6 +135,12 @@
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Library\xArmDotNet\xArmDotNet.csproj">
+      <Project>{cd45e01c-c1a0-4e46-baed-d5307911b9d2}</Project>
+      <Name>xArmDotNet</Name>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
