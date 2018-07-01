@@ -72,6 +72,7 @@ namespace xArmDotNet
             {
                 Debug.Write(string.Format("{0:X}-", item));
             }
+            Debug.Write("");
         }
 
         public void Connect()
@@ -84,59 +85,62 @@ namespace xArmDotNet
 
         }
 
-        public async void SendReport()
+        public int[] ReadServoOffsets(int[] servos)
         {
-            //ushort header = 0x5555;
-            //byte length = 9;
-            //Command command = Command.BusServoOffsetRead;
-
-            byte[] parameters = { 85, 85, 9, 23, 6, 1, 2, 3, 4, 5, 6 };
-
-            HidOutputReport report = device.CreateOutputReport();
-            byte[] buffer = new byte[report.Data.Length];
-            buffer[0] = 0; // packet id
-            Array.Copy(parameters, 0, buffer, 1, parameters.Length);
-            DataWriter dataWriter = new DataWriter();
-            dataWriter.WriteBytes(buffer);
-            report.Data = dataWriter.DetachBuffer();
-            await device.SendOutputReportAsync(report);
-
-            Debug.WriteLine(buffer.Length.ToString() + " bytes sent.");
-
-            //dataWriter.WriteUInt16(header);
-            //dataWriter.WriteByte(length);
-            //dataWriter.WriteByte((byte)command);
-
-            //foreach (ushort parameter in parameters)
-            //{
-            //    dataWriter.WriteByte((byte)parameter);
-            //}            
+            return null;
         }
 
-        public class Parameter
+        public async void SendReport(RobotCommand command)
+        {
+            byte[] parameters = { };
+
+            HidOutputReport report = device.CreateOutputReport();
+
+            DataWriter dataWriter = new DataWriter() { ByteOrder = ByteOrder.LittleEndian };
+            dataWriter.WriteByte(0); // packet id
+            dataWriter.WriteUInt16(0x5555); // header
+            dataWriter.WriteByte((byte)(parameters.Length + 2));
+            dataWriter.WriteByte((byte)RobotCommand.BusServoInfoRead);
+            dataWriter.WriteBytes(parameters);
+
+            IBuffer buffer = dataWriter.DetachBuffer();
+            buffer.Length = report.Data.Length;
+
+            report.Data = buffer;
+            await device.SendOutputReportAsync(report);
+
+            Debug.WriteLine(report.Data.Length.ToString() + " bytes sent.");
+        }
+
+        public class RobotParameter
         {
             public byte motor;
             public uint position;
         }
 
-        public enum Command
+        public enum RobotCommand
         {
-            MultiServoMove = 3,
-            ActionDownload = 5,
-            FullActionRun = 6,
-            FullActionStop = 7,
-            FullActionErase = 8,
-            ServoOffsetWrite = 12,
-            ServoOffsetRead = 13,
-            ServoOffsetAdjust = 14,
-            MultiServoUnload = 20,
-            MultiServoPosRead = 21,
-            BusServoOffsetWrite = 22,
-            BusServoOffsetRead = 23,
-            BusServoOffsetAdjust = 24,
-            BusServoMoroCtrl = 26, // ????
-            BusServoInfoWrite = 27,
-            BusServoInfoRead = 28
+            ServoMove =             3,  // (byte)count (ushort)time { (byte)id (ushort)position }
+            GroupRunRepeat =        5,  // (byte)group[255=all] (byte)times 
+            GroupRun =              6,  // (byte)group (ushort)count[0=continuous]
+            GroupStop =             7,  // -none-
+            GroupErase =            8,  // (byte)group[255=all]
+            GroupSpeed =            11, // (byte)group (ushort)percentage
+            xServoOffsetWrite =      12, 
+            xServoOffsetRead =       13, 
+            xServoOffsetAdjust =     14,
+            GetBatteryVoltage =     15, // -none-; (ushort)millivolts
+            ServoOff =              20, // (byte)count { (byte)id }
+            ServoPositionRead =     21, // (byte)count { (byte)id }; (byte)count { (byte)id (byte)offset }
+            ServoPositionWrite =    22, // (byte)count { (byte)id }
+            ServoOffsetRead =       23, // (byte)count { (byte)id }; (byte)count { (byte)id (byte)offset }
+            ServoOffsetWrite =      24, // (byte)id (ushort)value
+            BusServoMoroCtrl =      26, // (byte)id (byte)??? (ushort)speed
+            BusServoInfoWrite =     27, // (byte)id (ushort)pos_min (ushort)pos_max (ushort)volt_min (ushort)volt_max
+                                        //         (ushort)temp_max (byte)led_status (byte)led_warning
+            BusServoInfoRead =      28  // -none-; (byte)id (ushort)pos_min (ushort)pos_max (ushort)volt_min (ushort)volt_max 
+                                        //         (ushort)temp_max (byte)led_status (byte)led_warning (byte)dev_offset
+                                        //         (ushort)pos (byte)temp (ushort)volt
         }
     }
 }

@@ -1,6 +1,9 @@
-﻿using Windows.UI.Xaml;
+﻿using Windows.Foundation;
+using Windows.UI.ViewManagement;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Shapes;
 using xArmDotNet;
 
@@ -19,25 +22,17 @@ namespace xArmUSBConsole
         {
             InitializeComponent();
 
-            robot = new Robot();
-        }
+            ApplicationView.PreferredLaunchViewSize = new Size(1920, 1080);
+            ApplicationView.GetForCurrentView().SetPreferredMinSize(new Size(800, 600));
+            ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.PreferredLaunchViewSize;
 
-        // Causes info TextBox to scroll to bottom when updated.
-        private void Info_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            var grid = (Grid)VisualTreeHelper.GetChild(info, 0);
-            for (var i = 0; i <= VisualTreeHelper.GetChildrenCount(grid) - 1; i++)
-            {
-                object obj = VisualTreeHelper.GetChild(grid, i);
-                if (!(obj is ScrollViewer)) continue;
-                ((ScrollViewer)obj).ChangeView(0.0f, ((ScrollViewer)obj).ExtentHeight, 1.0f);
-                break;
-            }
+            robot = new Robot();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            robot.SendReport();
+            robot.SendReport(Robot.RobotCommand.BusServoInfoRead);
+            
         }
     }
 }
