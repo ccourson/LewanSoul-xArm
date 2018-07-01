@@ -18,11 +18,19 @@ namespace xArmConsole
     /// <summary>
     /// Interaction logic for UserControl1.xaml
     /// </summary>
-    public partial class UserControl1 : UserControl
+    public partial class RobotAxisControl : UserControl
     {
-        public UserControl1()
+        public String AxisLabelText
+        {
+            get { return (String)GetValue(LabelProperty); }
+            set { SetValue(LabelProperty, value); }
+        }
+        public static readonly DependencyProperty LabelProperty = DependencyProperty.Register("AxisLabelText", typeof(string), typeof(RobotAxisControl), new PropertyMetadata(""));
+
+        public RobotAxisControl()
         {
             InitializeComponent();
+            DataContext = this;
         }
 
         private void slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
