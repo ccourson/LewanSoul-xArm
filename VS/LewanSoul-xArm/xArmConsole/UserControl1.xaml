@@ -16,9 +16,9 @@
             <RowDefinition Height="36*"/>
         </Grid.RowDefinitions>
 
-        <TextBox x:Name="AxisLabel" FontSize="16" Text="{Binding Path=AxisLabelText}" FontWeight="Bold" HorizontalAlignment="Center" BorderBrush="Transparent"/>
+        <TextBox x:Name="AxisLabel" FontSize="20" Text="{Binding Path=AxisLabelText}" HorizontalAlignment="Center" BorderBrush="Transparent" Background="{DynamicResource TransparentBrush}" Foreground="{DynamicResource TextBoxFocusedBrush}"/>
         <Rectangle Grid.RowSpan="7" Stroke="Transparent" Fill="Transparent" MouseWheel="MouseWheel_Angle"/>
-        <Rectangle Grid.Row="5" Grid.RowSpan="2" Stroke="LightGray" Fill="Transparent" MouseWheel="MouseWheel_Offset"/>
+        <Rectangle Grid.Row="5" Grid.RowSpan="2" Stroke="{DynamicResource Brush04}" Fill="Transparent" MouseWheel="MouseWheel_Offset"/>
         <TextBox Grid.Row="1" x:Name="textboxAngle" Text="{Binding Value, ElementName=sliderAngle}" 
                  HorizontalAlignment="Center" VerticalAlignment="Center" 
                  HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontSize="12" 
