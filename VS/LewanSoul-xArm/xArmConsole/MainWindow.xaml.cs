@@ -22,14 +22,15 @@ namespace xArmConsole
         int tick = -1;
         int pingInterval = 20;
         int canvasDivisions = 10;
-        int canvasHorizontalDivisionSize;
-        int canvasVerticalDivisionSize;
+        double canvasHorizontalDivisionSize;
+        double canvasVerticalDivisionSize;
+        bool polling;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            dispatchTimer = new DispatcherTimer(DispatcherPriority.Render)
+            dispatchTimer = new DispatcherTimer(DispatcherPriority.Normal)
             {
                 Interval = new TimeSpan(100000) // 100ns * 1,000,000 = 100ms   .0001
             };
@@ -56,13 +57,18 @@ namespace xArmConsole
                 if (robot.IsConnected)
                 {
                     UpdateUIAxes();
-                    DrawCanvasBlip((Brush)FindResource("Brush01"), 0.8);
-                }
+
+                    DrawCanvasBlip(polling ? Brushes.Red : (Brush)FindResource("Brush01"), 0.8);
+
+                    polling = true;
+               }
                 else
                 {
                     DrawCanvasBlip((Brush)FindResource("Brush05"), 0.8);
                     // set a random ping interval for visual character.
                     pingInterval = new Random().Next(8, 24);
+
+                    polling = false;
                 }
             }
 
@@ -157,16 +163,19 @@ namespace xArmConsole
         private void Robot_OnReportReceived(object sender, OnReportReceivedEventArgs e)
         {
             Console.WriteLine("Robot_ReportReceived");
-
+            
             DataWriter dataWriter = new DataWriter();
             dataWriter.WriteBytes(e.Data);
+
             DataReader dataReader = DataReader.FromBuffer(dataWriter.DetachBuffer());
             dataReader.ByteOrder = ByteOrder.LittleEndian;
 
             if (dataReader.ReadUInt16() == 0x5555)
             {
-                int length = dataReader.ReadByte(); // not used
+                int length = dataReader.ReadByte();
+
                 RobotCommand command = (RobotCommand)dataReader.ReadByte();
+
                 if (command == RobotCommand.ServoOffsetRead)
                 {
                     int count = dataReader.ReadByte();
@@ -179,8 +188,10 @@ namespace xArmConsole
                 {
                     Dispatcher.Invoke(new Action(() => 
                     {
-                        DrawCanvasBlip(Brushes.Red, 0.6, 0.8);
                         int count = dataReader.ReadByte();
+
+                        DrawCanvasBlip(polling ? Brushes.Green : Brushes.Yellow, 0.5);
+
                         while (count-- > 0)
                         {
                             int servo = dataReader.ReadByte();
@@ -188,8 +199,8 @@ namespace xArmConsole
                             (RobotAxisControlGrid.Children[servo - 1] as RobotAxisControl).sliderAngle.Value = angle;
                         }
                     }));
-
                 }
+                polling = false;
             }
         }
 
@@ -200,8 +211,8 @@ namespace xArmConsole
 
         private void Window_LayoutUpdated(object sender, EventArgs e)
         {
-            canvasHorizontalDivisionSize = (int)(StatusCanvas.ActualWidth / canvasDivisions);
-            canvasVerticalDivisionSize = (int)(StatusCanvas.ActualHeight / canvasDivisions);
+            canvasHorizontalDivisionSize = StatusCanvas.ActualWidth / canvasDivisions;
+            canvasVerticalDivisionSize = StatusCanvas.ActualHeight / canvasDivisions;
         }
     }
 }
