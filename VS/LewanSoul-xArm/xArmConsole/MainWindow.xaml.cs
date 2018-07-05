@@ -162,8 +162,6 @@ namespace xArmConsole
 
         private void Robot_OnReportReceived(object sender, OnReportReceivedEventArgs e)
         {
-            Console.WriteLine("Robot_ReportReceived");
-            
             DataWriter dataWriter = new DataWriter();
             dataWriter.WriteBytes(e.Data);
 
