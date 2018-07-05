@@ -7,6 +7,9 @@ using HidLibrary;
 
 namespace TestConsole.USB
 {
+    /// <summary>
+    /// 
+    /// </summary>
     class Program
     {
         private const int VendorId = 0x0483;
