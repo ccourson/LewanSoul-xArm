@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Storage;
 using Windows.Storage.Streams;
-using Windows.UI.Core;
 using HidLibrary;
-using System.IO;
 
 namespace xArmDotNet
 {
@@ -57,7 +53,12 @@ namespace xArmDotNet
                 return;
             }
 
-            //Debug.WriteLine(report.GetBytes().Length.ToString() + " bytes received: " + BitConverter.ToString(report.Data));
+            if (report.ReadStatus != HidDeviceData.ReadStatus.Success)
+            {
+
+            }
+
+            //Debug.WriteLine(report.GetBytes().Length.ToString() + " bytes received. Status: " + report.ReadStatus.ToString() + " ID: " + report.ReportId + " Data: " + BitConverter.ToString(report.Data));
 
             OnReportReceived?.Invoke(this, new OnReportReceivedEventArgs() { Data = report.Data });
 
@@ -91,7 +92,7 @@ namespace xArmDotNet
             byte[] bytes = new byte[buffer.Length];
             DataReader.FromBuffer(buffer).ReadBytes(bytes);
 
-            device.Write(bytes);
+            device.Write(bytes, 10);
         }
 
         /// <summary>

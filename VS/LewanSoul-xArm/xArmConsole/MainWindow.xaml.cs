@@ -4,12 +4,51 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using System.Linq;
-using xArmDotNet;
 using Windows.Storage.Streams;
+using System.Windows.Controls;
+using xArmDotNet;
+using System.Windows.Data;
+using System.Globalization;
+using System.Linq;
 
 namespace xArmConsole
 {
+    public class MyDispatcherTimer : DispatcherTimer
+    {
+        public event EventHandler Tick100;
+        public event EventHandler Tick300;
+
+        long millisecondAccumulator100 = 0;
+        long millisecondAccumulator300 = 0;
+        DateTime tickTimestamp = DateTime.Now;
+
+        public MyDispatcherTimer(DispatcherPriority priority = DispatcherPriority.Normal) : base(priority)
+        {
+            Interval = new TimeSpan(0, 0, 0, 0, 1);
+            Tick += MyDispatcherTimer_Tick;
+        }
+
+        private void MyDispatcherTimer_Tick(object sender, EventArgs e)
+        {
+            DateTime now = DateTime.Now;
+            int ms = now.Subtract(tickTimestamp).Milliseconds;
+
+            if ((millisecondAccumulator100 += ms) > 100 )
+            {
+                millisecondAccumulator100 %= 100;
+                Tick100?.Invoke(this, new EventArgs() { });
+            }
+
+            if ((millisecondAccumulator300 += ms) > 300)
+            {
+                millisecondAccumulator300 %= 300;
+                Tick300?.Invoke(this, new EventArgs() { });
+            }
+
+            tickTimestamp = now;
+        }
+    }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -17,69 +56,87 @@ namespace xArmConsole
     {
         public Robot robot = new Robot();
 
-        DispatcherTimer dispatchTimer;
+        List<DispatcherTimer> dispatchTimers = new List<DispatcherTimer>();
         List<Line> blips = new List<Line>();
-        int tick = -1;
-        int pingInterval = 20;
+        const int defaultPingInterval = 6;
         int canvasDivisions = 10;
         double canvasHorizontalDivisionSize;
         double canvasVerticalDivisionSize;
         bool polling;
 
+        const int rxTimeout = 300;  // 300ms
+
         public MainWindow()
         {
+            new MyDispatcherTimer();
             InitializeComponent();
-
-            dispatchTimer = new DispatcherTimer(DispatcherPriority.Normal)
-            {
-                Interval = new TimeSpan(100000) // 100ns * 1,000,000 = 100ms   .0001
-            };
-            dispatchTimer.Tick += DispatchTimer_Tick;
-            dispatchTimer.Start();
+            InitializeDispatcherTimers();
 
             robot.OnConnected += Robot_OnConnected;
             robot.OnDisconnected += Robot_OnDisconnected;
             robot.OnReportReceived += Robot_OnReportReceived;
         }
 
-        private void DispatchTimer_Tick(object sender, EventArgs e)
+        private void InitializeDispatcherTimers()
         {
-            tick = ++tick % pingInterval;
+            dispatchTimers.Add(new DispatcherTimer(DispatcherPriority.Normal)
+            {
+                Interval = TimeSpan.FromMilliseconds(15),
+                Tag = DateTime.Now
+            });
+            dispatchTimers.Last().Tick += MainWindow_16msTick;
+
+            dispatchTimers.Add(new DispatcherTimer(DispatcherPriority.Normal)
+            {
+                Interval = TimeSpan.FromMilliseconds(280),
+                Tag = DateTime.Now
+            });
+            dispatchTimers.Last().Tick += MainWindow_300msTick;
+
+            dispatchTimers.ForEach(t => t.Start());
+        }
+
+        private void MainWindow_300msTick(object sender, EventArgs e)
+        {
+            UpdateTickRateLabel((DispatcherTimer)sender, LabelPing, true);
+
+            if (robot.IsConnected)
+            {
+                UpdateUIAxes();
+                TransmitCanvasBlip(polling ? Brushes.Orange : Brushes.Blue, 0.8);
+                polling = true;
+            }
+            else
+            {
+                TransmitCanvasBlip(Brushes.Red, 0.8);
+                polling = false;
+            }
+        }
+
+        private void MainWindow_16msTick(object sender, EventArgs e)
+        {
+            UpdateTickRateLabel((DispatcherTimer)sender, LabelFps);
 
             StatusCanvas.Children.Clear();
 
-            DrawGridOnCanvas();
-
-            DrawCanvasBaseline();
-
-            if (tick++ == 0)
-            {
-                if (robot.IsConnected)
-                {
-                    UpdateUIAxes();
-
-                    DrawCanvasBlip(polling ? Brushes.Red : (Brush)FindResource("Brush01"), 0.8);
-
-                    polling = true;
-               }
-                else
-                {
-                    DrawCanvasBlip((Brush)FindResource("Brush05"), 0.8);
-                    // set a random ping interval for visual character.
-                    pingInterval = new Random().Next(8, 24);
-
-                    polling = false;
-                }
-            }
-
             blips.RemoveAll(l => l.X1 < 1); // Remove old blips.
 
-            foreach (var item in blips)
+            foreach (var item in blips) // Slide blips over 1 pixel
             {
                 StatusCanvas.Children.Add(item);
-                item.X1--;
-                item.X2--;
+                item.X1 -= 1.0;
+                item.X2 -= 1.0;
             }
+        }
+
+        private void UpdateTickRateLabel(DispatcherTimer dispatcherTimer, Label label, bool mode = false)
+        {
+            DateTime now = DateTime.Now;
+            double ms = now.Subtract((DateTime)dispatcherTimer.Tag).Milliseconds;
+            double chg = ms - Convert.ToDouble(label.Tag); // positive if shorter
+            label.Tag = Convert.ToDouble(label.Tag) + chg * (mode ? 0.2 :0.05);
+            label.Content = mode ? ((double)label.Tag).ToString("N0") + "ms" : (1000.0 / (double)label.Tag).ToString("N0");
+            dispatcherTimer.Tag = now;
         }
 
         private void UpdateUIAxes()
@@ -87,68 +144,38 @@ namespace xArmConsole
             robot.GetServoAxes(1, 2, 3, 4, 5, 6);
         }
 
-        private void DrawCanvasBlip(Brush brush, double amplitude, double opacity = 1)
+        private void TransmitCanvasBlip(Brush brush, double amplitude, double opacity = 1)
         {
             int verticalOffset = (int)(amplitude * canvasVerticalDivisionSize * canvasDivisions) / 2;
             Line line = new Line()
             {
                 Opacity = opacity,
                 Stroke = brush,
-                X1 = StatusCanvas.ActualWidth - 1,
-                X2 = StatusCanvas.ActualWidth - 1,
-                Y1 = StatusCanvas.ActualHeight / 2 - verticalOffset,
-                Y2 = StatusCanvas.ActualHeight / 2 + verticalOffset
+                X1 = StatusCanvas.ActualWidth - 2,
+                X2 = StatusCanvas.ActualWidth - 2,
+                Y1 = 2,
+                Y2 = StatusCanvas.ActualHeight / 2
             };
 
             blips.Add(line);
         }
 
-        private void DrawCanvasBaseline()
+        private void ReceiveCanvasBlip(Brush brush, double amplitude, double opacity = 1)
         {
-            Line baseline = new Line()
+            int verticalOffset = (int)(amplitude * canvasVerticalDivisionSize * canvasDivisions) / 2;
+            Line line = new Line()
             {
-                Stroke = (robot != null && robot.IsConnected) ? (Brush)FindResource("Brush01") : (Brush)FindResource("Brush04"),
-                StrokeDashArray = new DoubleCollection(new double[] { 1 }),
-                X1 = 0,
-                X2 = StatusCanvas.ActualWidth - 1,
-                Y1 = StatusCanvas.ActualHeight / 2,
+                Opacity = opacity,
+                Stroke = brush,
+                X1 = StatusCanvas.ActualWidth - 2,
+                X2 = StatusCanvas.ActualWidth - 2,
+                Y1 = StatusCanvas.ActualHeight - 2,
                 Y2 = StatusCanvas.ActualHeight / 2
             };
-            StatusCanvas.Children.Add(baseline);
+
+            blips.Add(line);
         }
 
-        private void DrawGridOnCanvas()
-        {
-            // vertical grid
-            for (int i = 0; i <= canvasDivisions; i ++)
-            {
-                StatusCanvas.Children.Add(new Line()
-                {
-                    StrokeThickness = 1,
-                    Stroke = (Brush)FindResource("Brush05"),
-                    X1 = i * canvasHorizontalDivisionSize,
-                    X2 = i * canvasHorizontalDivisionSize,
-                    Y1 = 0,
-                    Y2 = StatusCanvas.ActualHeight,
-                    StrokeDashArray = new DoubleCollection(new double[] { 1 })
-                });
-            }
-
-            // horizontal grid
-            for (int i = 0; i <= canvasDivisions; i++)
-            {
-                StatusCanvas.Children.Add(new Line()
-                {
-                    StrokeThickness = 1,
-                    Stroke = (Brush)FindResource("Brush05"),
-                    X1 = 0,
-                    X2 = StatusCanvas.ActualWidth,
-                    Y1 = i * canvasVerticalDivisionSize,
-                    Y2 = i * canvasVerticalDivisionSize,
-                    StrokeDashArray = new DoubleCollection(new double[] { 1 })
-                });
-            }
-        }
 
         private void Robot_OnDisconnected(object sender, EventArgs e)
         {
@@ -157,14 +184,14 @@ namespace xArmConsole
 
         private void Robot_OnConnected(object sender, EventArgs e)
         {
-            pingInterval = 16;
+            
         }
 
         private void Robot_OnReportReceived(object sender, OnReportReceivedEventArgs e)
         {
             DataWriter dataWriter = new DataWriter();
             dataWriter.WriteBytes(e.Data);
-
+            
             DataReader dataReader = DataReader.FromBuffer(dataWriter.DetachBuffer());
             dataReader.ByteOrder = ByteOrder.LittleEndian;
 
@@ -188,13 +215,15 @@ namespace xArmConsole
                     {
                         int count = dataReader.ReadByte();
 
-                        DrawCanvasBlip(polling ? Brushes.Green : Brushes.Yellow, 0.5);
+                        ReceiveCanvasBlip(polling ? Brushes.Green : Brushes.GreenYellow, 0.8);
 
                         while (count-- > 0)
                         {
                             int servo = dataReader.ReadByte();
                             int angle = dataReader.ReadInt16();
-                            (RobotAxisControlGrid.Children[servo - 1] as RobotAxisControl).sliderAngle.Value = angle;
+                            var grid = (Grid)RobotAxisControlGrid.Children[servo - 1];
+                            RobotAxisControl control = (RobotAxisControl)grid.Children[1];
+                            control.sliderAngle.Value = angle;
                         }
                     }));
                 }
@@ -211,6 +240,83 @@ namespace xArmConsole
         {
             canvasHorizontalDivisionSize = StatusCanvas.ActualWidth / canvasDivisions;
             canvasVerticalDivisionSize = StatusCanvas.ActualHeight / canvasDivisions;
+        }
+
+        private void MyButtonControl_OnClick(object sender, EventArgs e)
+        {
+
+        }
+
+        private void TabControl1_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            TabItem tabItem;
+
+            if (e.RemovedItems.Count > 0)
+            {
+                tabItem = (TabItem)e.RemovedItems[0];
+                ((Label)tabItem.Header).Background = new SolidColorBrush((Color)FindResource("ButtonBackgroundColor"));
+            }
+
+            tabItem = (TabItem)e.AddedItems[0];
+            ((Label)tabItem.Header).Background = new SolidColorBrush((Color)FindResource("WindowBorder"));
+        }
+
+        private void ButtonRetrieveServoHomeDefaultValues_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ButtonSetServoHomeDefaultValues_Click(object sender, RoutedEventArgs e)
+        {
+            ServoAxisHomePosition1.Text = "500";
+            ServoAxisHomePosition2.Text = "500";
+            ServoAxisHomePosition3.Text = "500";
+            ServoAxisHomePosition4.Text = "500";
+            ServoAxisHomePosition5.Text = "500";
+            ServoAxisHomePosition6.Text = "500";
+        }
+
+        private void Scope_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            StatusGrid.Children.Clear();
+            StatusGrid.Children.Add(new Rectangle() { Width = StatusGrid.ActualWidth - 1, Height = StatusGrid.ActualHeight - 1, Stroke = Brushes.White, Opacity = 0.3 });
+
+            StatusGrid.Children.Add(new Line() { X1 = 1, Y1 = StatusGrid.ActualHeight * 0.25 - 2, Y2 = StatusGrid.ActualHeight * 0.25 - 2, X2 = StatusGrid.ActualWidth - 2, Stroke = Brushes.White, Opacity = 0.2});
+            StatusGrid.Children.Add(new Line() { X1 = 1, Y1 = StatusGrid.ActualHeight * 0.50 - 2, Y2 = StatusGrid.ActualHeight * 0.50 - 2, X2 = StatusGrid.ActualWidth - 2, Stroke = Brushes.White, Opacity = 0.3 });
+            StatusGrid.Children.Add(new Line() { X1 = 1, Y1 = StatusGrid.ActualHeight * 0.75 - 2, Y2 = StatusGrid.ActualHeight * 0.75 - 2, X2 = StatusGrid.ActualWidth - 2, Stroke = Brushes.White, Opacity = 0.2 });
+
+            for (double i = StatusGrid.ActualWidth - 20; i > 0; i -= 20)
+            {
+                StatusGrid.Children.Add(new Line() { X1 = i, X2 = i, Y1 = 1, Y2 = StatusGrid.ActualHeight - 2, Stroke = Brushes.White, Opacity = 0.2 });
+            }
+
+            //blips.Clear();
+
+            double scale = e.NewSize.Width - e.PreviousSize.Width;
+            foreach (var x in blips)
+            {
+                x.X1 += scale;
+                x.X2 = x.X1;
+            }
+            blips.RemoveAll(l => l.X1 < 1);
+        }
+    }
+
+    class Factor : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values.Count() == 2)
+            {
+                return ((double)values[0] * (double)values[1]);
+            }
+
+            return false;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
         }
     }
 }

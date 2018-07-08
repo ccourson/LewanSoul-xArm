@@ -6,32 +6,258 @@
         xmlns:local="clr-namespace:xArmConsole"
         mc:Ignorable="d"
         Title="xArm Console" Width="1440" Height="920" 
-        WindowStartupLocation="CenterScreen" SnapsToDevicePixels="True" ResizeMode="CanMinimize" Background="{DynamicResource TransparentBrush}" MinWidth="1440" MinHeight="920" LayoutUpdated="Window_LayoutUpdated">
+        WindowStartupLocation="CenterScreen" 
+        SnapsToDevicePixels="True" 
+        ResizeMode="CanResize" 
+        MinWidth="1440" MinHeight="920" 
+        LayoutUpdated="Window_LayoutUpdated">
+
+    <Window.Foreground>
+        <SolidColorBrush Color="{DynamicResource WindowForeground}"/>
+    </Window.Foreground>
+
+    <Window.Background>
+        <SolidColorBrush Color="{DynamicResource WindowBackground}"/>
+    </Window.Background>
+
+    <Window.Resources>
+        <local:Factor x:Key="Factor"/>
+    </Window.Resources>
+
     <Grid x:Name="gridContent">
         <Grid.RowDefinitions>
             <RowDefinition Height="14*"/>
             <RowDefinition Height="19*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="644*"/>
-            <ColumnDefinition Width="148*"/>
-            <ColumnDefinition Width="643*"/>
+            <ColumnDefinition Width="560*"/>
+            <ColumnDefinition Width="135*"/>
+            <ColumnDefinition Width="185*"/>
+            <ColumnDefinition Width="261*"/>
+            <ColumnDefinition Width="290*"/>
         </Grid.ColumnDefinitions>
 
-        <TextBlock Text="Camera Offline" Padding="10" Foreground="{DynamicResource ValidationErrorElement}" Background="{DynamicResource Brush04}" Margin="10" FontSize="24"></TextBlock>
-        <Canvas x:Name="StatusCanvas" Grid.Column="1" Height="50" VerticalAlignment="Top" Background="Black" Margin="0,10,0,0">
-            <Path x:Name="StatusLine" Data="M10.949118,28.994013 L155.94889,28.994014" Stretch="Fill" Stroke="{DynamicResource Brush04}" Canvas.Top="24.5" Height="1" Width="146" Canvas.Left="0.949"/>
-        </Canvas>
-        <TextBlock Grid.Column="2" Text="Video Offline" Foreground="{DynamicResource ValidationErrorElement}" Padding="10" Background="{DynamicResource Brush04}" Margin="10" FontSize="24"></TextBlock>
+        <Viewbox Margin="0,10,0,5">
+            <Grid Width="640" Height="480" MaxWidth="680" MaxHeight="480">
+                <Grid.Background>
+                    <SolidColorBrush Color="{DynamicResource BlockBackground}"/>
+                </Grid.Background>
+                <Label FontSize="20" Content="Camera Offline" MaxWidth="680" MaxHeight="480">
+                    <Label.Foreground>
+                        <SolidColorBrush Color="{DynamicResource WindowForeground}"/>
+                    </Label.Foreground>
+                </Label>
+            </Grid>
+        </Viewbox>
 
-        <UniformGrid x:Name="RobotAxisControlGrid" Grid.Row="1" Columns="6" Grid.ColumnSpan="2" Margin="10">
-            <local:RobotAxisControl AxisLabelText="A1"/>
-            <local:RobotAxisControl AxisLabelText="A2"/>
-            <local:RobotAxisControl AxisLabelText="A3"/>
-            <local:RobotAxisControl AxisLabelText="A4"/>
-            <local:RobotAxisControl AxisLabelText="A5"/>
-            <local:RobotAxisControl AxisLabelText="A6"/>
+        <Viewbox Grid.Column="3" Margin="0,10,0,5" Grid.ColumnSpan="2">
+            <Grid Width="640" Height="480" MaxWidth="680" MaxHeight="480">
+                <Grid.Background>
+                    <SolidColorBrush Color="{DynamicResource BlockBackground}"/>
+                </Grid.Background>
+                <Label FontSize="20" Content="Video Unavailable">
+                    <Label.Foreground>
+                        <SolidColorBrush Color="{DynamicResource WindowForeground}"/>
+                    </Label.Foreground>
+                </Label>
+            </Grid>
+        </Viewbox>
+
+        <Grid x:Name="Scope" 
+              Grid.ColumnSpan="2"
+              VerticalAlignment="Top"
+              Margin="0,10,0,0" Height="75" Grid.Column="1" SizeChanged="Scope_SizeChanged">
+
+            <!--<Grid.Resources>
+                <vc: x:Key="Lerp" V1="0" V2="0" T="0"></vc:>
+
+                <local:App.:Lerp x:Name="Lerp25"  V1="0" V2="{Binding ActualWidth, ElementName=StatusGrid}" T="25" />
+            </Grid.Resources>-->
+
+            <Canvas x:Name="StatusGrid" Background="Black">
+                <!--<Rectangle Width="{Binding ActualWidth, ElementName=StatusGrid}" Height="{Binding ActualHeight, ElementName=StatusGrid}" Stroke="#FF555555"/>
+
+                <Line X2="{Binding ActualWidth, ElementName=StatusGrid}" Canvas.Top="12.5" Stroke="#FF555555" StrokeDashArray="2"/>
+                <Line X2="{Binding ActualWidth, ElementName=StatusGrid}" Canvas.Top="25" Stroke="#FF555555"/>
+                <Line X2="{Binding ActualWidth, ElementName=StatusGrid}" Canvas.Top="37.5" Stroke="#FF555555" StrokeDashArray="2"/>
+
+                <Line Y2="{Binding ActualHeight, ElementName=StatusGrid}" Canvas.Left="25" Stroke="#FF555555" StrokeDashArray="2"/>
+                <Line Y2="{Binding ActualHeight, ElementName=StatusGrid}" Canvas.Left="50" Stroke="#FF555555" StrokeDashArray="2"/>
+                <Line Y2="{Binding ActualHeight, ElementName=StatusGrid}" Canvas.Left="75" Stroke="#FF555555" StrokeDashArray="2"/>
+                <Line Y2="{Binding ActualHeight, ElementName=StatusGrid}" Canvas.Left="100" Stroke="#FF555555" StrokeDashArray="2"/>
+                <Line Y2="{Binding ActualHeight, ElementName=StatusGrid}" Canvas.Left="125" Stroke="#FF555555" StrokeDashArray="2"/>-->
+            </Canvas>
+
+            <Canvas x:Name="StatusCanvas" Background="Transparent"/>
+        </Grid>
+
+        <UniformGrid x:Name="RobotAxisControlGrid" 
+                     Grid.Row="1" 
+                     Grid.ColumnSpan="3"
+                     Columns="6" VerticalAlignment="Center" HorizontalAlignment="Center" MinWidth="700" Height="475" Width="700" Margin="40.774,18.424,139.841,18.424">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="19*"/>
+                    <RowDefinition Height="227*"/>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" FontSize="20" HorizontalContentAlignment="Center" Content="Gripper">
+                    <Label.Foreground>
+                        <SolidColorBrush Color="{DynamicResource WindowHeaderForeground}"/>
+                    </Label.Foreground>
+                </Label>
+                <local:RobotAxisControl Grid.Row="1"/>
+            </Grid>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="19*"/>
+                    <RowDefinition Height="227*"/>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" FontSize="20" HorizontalContentAlignment="Center" Content="Rotate">
+                    <Label.Foreground>
+                        <SolidColorBrush Color="{DynamicResource WindowHeaderForeground}"/>
+                    </Label.Foreground>
+                </Label>
+                <local:RobotAxisControl Grid.Row="1"/>
+            </Grid>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="19*"/>
+                    <RowDefinition Height="227*"/>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" FontSize="20" HorizontalContentAlignment="Center" Content="Wrist">
+                    <Label.Foreground>
+                        <SolidColorBrush Color="{DynamicResource WindowHeaderForeground}"/>
+                    </Label.Foreground>
+                </Label>
+                <local:RobotAxisControl Grid.Row="1"/>
+            </Grid>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="19*"/>
+                    <RowDefinition Height="227*"/>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" FontSize="20" HorizontalContentAlignment="Center" Content="Elbow">
+                    <Label.Foreground>
+                        <SolidColorBrush Color="{DynamicResource WindowHeaderForeground}"/>
+                    </Label.Foreground>
+                </Label>
+                <local:RobotAxisControl Grid.Row="1"/>
+            </Grid>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="19*"/>
+                    <RowDefinition Height="227*"/>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" FontSize="20" HorizontalContentAlignment="Center" Content="Shoulder">
+                    <Label.Foreground>
+                        <SolidColorBrush Color="{DynamicResource WindowHeaderForeground}"/>
+                    </Label.Foreground>
+                </Label>
+                <local:RobotAxisControl Grid.Row="1"/>
+            </Grid>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="19*"/>
+                    <RowDefinition Height="227*"/>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" FontSize="20" HorizontalContentAlignment="Center" Content="Base">
+                    <Label.Foreground>
+                        <SolidColorBrush Color="{DynamicResource WindowHeaderForeground}"/>
+                    </Label.Foreground>
+                </Label>
+                <local:RobotAxisControl Grid.Row="1"/>
+            </Grid>
+
         </UniformGrid>
-        <Button x:Name="TestButton" Content="Button" Grid.Column="2" HorizontalAlignment="Left" Height="70" Margin="138.552,167,0,0" Grid.Row="1" VerticalAlignment="Top" Width="115" Click="TestButton_Click"/>
+
+        <Grid Grid.Column="1" Margin="0,60,0,0" Grid.ColumnSpan="2">
+            <Label Content="FPS:" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="0" VerticalContentAlignment="Center" Foreground="#FFB4B4B4" FontSize="14" BorderThickness="1" FontWeight="Bold" Margin="0,24.38,0,0"/>
+            <Label x:Name="LabelFps" Content="Label" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="0" VerticalContentAlignment="Center" Foreground="#FFB4B4B4" FontSize="14" BorderThickness="1" Margin="34.52,24.38,0,0"/>
+            <Label Content="Ping:" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="0" VerticalContentAlignment="Center" Foreground="#FFB4B4B4" FontSize="14" BorderThickness="1" FontWeight="Bold" Margin="85.064,24.38,0,0"/>
+            <Label x:Name="LabelPing" Content="Label" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="0" VerticalContentAlignment="Center" Foreground="#FFB4B4B4" FontSize="14" BorderThickness="1" Margin="125.574,24.38,0,0" Width="49.035"/>
+        </Grid>
+
+        <Grid Grid.Column="2" Grid.Row="1" Grid.ColumnSpan="3" MaxHeight="500" Width="700.001" Height="500" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="18.256,5.924,18.257,5.924">
+            <TabControl Style="{DynamicResource TabControlStyle1}" Margin="0 20 10 10" >
+                <TabControl.Resources>
+                    <Style TargetType="Label">
+                        <Setter Property="Foreground" >
+                            <Setter.Value>
+                                <SolidColorBrush Color="{StaticResource WindowForeground}"/>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <Style TargetType="TextBox">
+                        <Setter Property="BorderBrush" >
+                            <Setter.Value>
+                                <SolidColorBrush Color="{StaticResource WindowBorder}"/>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="Background" >
+                            <Setter.Value>
+                                <SolidColorBrush Color="{StaticResource WindowEditableBackground}"/>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="Foreground" >
+                            <Setter.Value>
+                                <SolidColorBrush Color="{StaticResource WindowForeground}"/>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </TabControl.Resources>
+
+                <TabItem Header="Control" Style="{DynamicResource TabItemStyle1}">
+                    <Grid>
+                        <Button Content="Servos Home" Height="75" VerticalAlignment="Top" Margin="26.265,30.324,508.569,0" Style="{DynamicResource ButtonStyle1}" FontSize="20"/>
+                        <Button Content="Servos Off" Height="75" VerticalAlignment="Top" Margin="120.431,135.324,414.403,0" Style="{DynamicResource ButtonStyle1}" FontSize="20"/>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Console" Style="{DynamicResource TabItemStyle1}">
+                    <Grid>
+                        <Label HorizontalAlignment="Left" VerticalAlignment="Top" Content="Label1">
+                        </Label>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Settings" Style="{DynamicResource TabItemStyle1}">
+                    <Grid>
+                        <Label HorizontalAlignment="Left" VerticalAlignment="Top" Content="Home Position Servo Values"/>
+                        <Label HorizontalAlignment="Left" VerticalAlignment="Top" Content="A1" Margin="26,41.057,0,0"/>
+                        <TextBox x:Name="ServoAxisHomePosition1"  HorizontalAlignment="Left" VerticalAlignment="Top" Text="500" Margin="59.68,46.387,0,0" Width="50" HorizontalContentAlignment="Center" FontSize="18"/>
+                        <Label HorizontalAlignment="Left" VerticalAlignment="Top" Content="A2" Margin="126,41.057,0,0"/>
+                        <TextBox x:Name="ServoAxisHomePosition2"  HorizontalAlignment="Left" VerticalAlignment="Top" Text="500" Margin="159.68,46.387,0,0" Width="50" HorizontalContentAlignment="Center" FontSize="18"/>
+                        <Label HorizontalAlignment="Left" VerticalAlignment="Top" Content="A3" Margin="219.12,41.057,0,0"/>
+                        <TextBox x:Name="ServoAxisHomePosition3"  HorizontalAlignment="Left" VerticalAlignment="Top" Text="500" Margin="252.8,46.387,0,0" Width="50" HorizontalContentAlignment="Center" FontSize="18"/>
+                        <Label HorizontalAlignment="Left" VerticalAlignment="Top" Content="A4" Margin="313.32,41.057,0,0"/>
+                        <TextBox x:Name="ServoAxisHomePosition4"  HorizontalAlignment="Left" VerticalAlignment="Top" Text="500" Margin="347,46.387,0,0" Width="50" HorizontalContentAlignment="Center" FontSize="18"/>
+                        <Label HorizontalAlignment="Left" VerticalAlignment="Top" Content="A5" Margin="407,41.057,0,0"/>
+                        <TextBox x:Name="ServoAxisHomePosition5"  HorizontalAlignment="Left" VerticalAlignment="Top" Text="500" Margin="440.68,46.387,0,0" Width="50" HorizontalContentAlignment="Center" FontSize="18"/>
+                        <Label HorizontalAlignment="Left" VerticalAlignment="Top" Content="A6" Margin="499.68,41.057,0,0"/>
+                        <TextBox x:Name="ServoAxisHomePosition6"  HorizontalAlignment="Left" VerticalAlignment="Top" Text="500" Margin="533.36,46.387,0,0" Width="50" HorizontalContentAlignment="Center" FontSize="18"/>
+                        <Button x:Name="ButtonSetServoHomeDefaultValues" HorizontalAlignment="Left" VerticalAlignment="Top" Width="25.94" Height="25.94" Margin="595.06,46.387,0,0" Content="å" FontFamily="Wingdings 3" ToolTip="Set all axis defaults to 500." Click="ButtonSetServoHomeDefaultValues_Click">
+                            <Button.Foreground>
+                                <SolidColorBrush Color="{DynamicResource WindowHeaderForeground}"/>
+                            </Button.Foreground>
+                            <Button.BorderBrush>
+                                <SolidColorBrush Color="{DynamicResource ButtonBackgroundColor}"/>
+                            </Button.BorderBrush>
+                            <Button.Background>
+                                <SolidColorBrush Color="{DynamicResource ButtonBackgroundColor}"/>
+                            </Button.Background>
+                        </Button>
+                        <Button x:Name="ButtonRetrieveServoHomeDefaultValues" HorizontalAlignment="Left" VerticalAlignment="Top" Width="25.94" Height="25.94" Margin="630.06,46.387,0,0" Content="ç" FontFamily="Wingdings 3" ToolTip="Download current positions." Click="ButtonRetrieveServoHomeDefaultValues_Click">
+                            <Button.Foreground>
+                                <SolidColorBrush Color="{DynamicResource WindowHeaderForeground}"/>
+                            </Button.Foreground>
+                            <Button.BorderBrush>
+                                <SolidColorBrush Color="{DynamicResource ButtonBackgroundColor}"/>
+                            </Button.BorderBrush>
+                            <Button.Background>
+                                <SolidColorBrush Color="{DynamicResource ButtonBackgroundColor}"/>
+                            </Button.Background>
+                        </Button>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </Grid>
     </Grid>
 </Window>

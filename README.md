@@ -4,6 +4,8 @@
 
 ## USB Communications
 
+Uses https://github.com/mikeobrien/HidLibrary.
+
 ## xArm Controller USB Protocol
 
 In general terms, a packet transmitted to the xArm will have the following format.
@@ -28,41 +30,36 @@ Requests and Reqponses are described in the following syntax:
 * Each field is described by the type in parentheses.
 * Curly braces denote that their content may be repeated more than once.
 
-#### (28) ServoOffsetRead  
+#### ServoOffsetRead (28)  
 
-Read the offset of one or more servos.
+Read the offset value of one or more servos.
 
-    Request: (byte)count { (byte)id }
+Request: (byte)**count** { (byte)**id** }
 
-**count** is the number of servos in id list. **id** is one or more servo ids.
+Response: (byte)**count** { (byte)id (sbyte)**offset** }
 
-    Response: (byte)count { (byte)id (byte)offset }
-
-
+Parameters: **count** is the number of servos in id list. **id** is one or more servo ids. **offset** is a signed byte with valid range of -128 to 128.
  
-
-Uses https://github.com/mikeobrien/HidLibrary
-
-
-
-        ServoMove =             3,  // (byte)count (ushort)time { (byte)id (ushort)position }
-        GroupRunRepeat =        5,  // (byte)group[255=all] (byte)times 
-        GroupRun =              6,  // (byte)group (ushort)count[0=continuous]
-        GroupStop =             7,  // -none-
-        GroupErase =            8,  // (byte)group[255=all]
-        GroupSpeed =            11, // (byte)group (ushort)percentage
-        xServoOffsetWrite =      12, 
-        xServoOffsetRead =       13, 
-        xServoOffsetAdjust =     14,
-        GetBatteryVoltage =     15, // -none-; (ushort)millivolts
-        ServoOff =              20, // (byte)count { (byte)id }
-        ServoPositionRead =     21, // (byte)count { (byte)id }; (byte)count { (byte)id (byte)offset }
-        ServoPositionWrite =    22, // (byte)count { (byte)id }
-        ServoOffsetRead =       23, // (byte)count { (byte)id }; (byte)count { (byte)id (byte)offset }
-        ServoOffsetWrite =      24, // (byte)id (ushort)value
-        BusServoMoroCtrl =      26, // (byte)id (byte)??? (ushort)speed
-        BusServoInfoWrite =     27, // (byte)id (ushort)pos_min (ushort)pos_max (ushort)volt_min (ushort)volt_max
-                                    //         (ushort)temp_max (byte)led_status (byte)led_warning
-        BusServoInfoRead =      28  // -none-; (byte)id (ushort)pos_min (ushort)pos_max (ushort)volt_min (ushort)volt_max 
-                                    //         (ushort)temp_max (byte)led_status (byte)led_warning (byte)dev_offset
-                                    //         (ushort)pos (byte)temp (ushort)volt
+    ServoMove             3  (byte)count (ushort)time { (byte)id (ushort)position }
+    GroupRunRepeat        5  (byte)group[255=all] (byte)times 
+    GroupRun              6  (byte)group (ushort)count[0=continuous]
+    GroupStop             7  -none-
+    GroupErase            8  (byte)group[255=all]
+    GroupSpeed           11  (byte)group (ushort)percentage
+    xServoOffsetWrite    12  *** not sure
+    xServoOffsetRead     13  *** not sure
+    xServoOffsetAdjust   14  *** not sure
+    GetBatteryVoltage    15  -none-; (ushort)millivolts
+    ServoOff             20  (byte)count { (byte)id }
+    ServoPositionRead    21  (byte)count { (byte)id }; (byte)count { (byte)id (ushort)position }
+    ServoPositionWrite   22  (byte)count { (byte)id (ushort)position }
+    ServoOffsetRead      23  (byte)count { (byte)id }; (byte)count { (byte)id (sbyte)offset }
+    ServoOffsetWrite     24  (byte)id (sbyte)offset
+    BusServoMoroCtrl     26  (byte)id (byte)??? (ushort)speed
+    BusServoInfoWrite    27  (byte)id (ushort)pos_min (ushort)pos_max (ushort)volt_min
+                             (ushort)volt_max (ushort)temp_max (byte)led_status
+                             (byte)led_warning
+    BusServoInfoRead     28  -none-; (byte)id (ushort)pos_min (ushort)pos_max (ushort)volt_min
+                             (ushort)volt_max (ushort)temp_max (byte)led_status
+                             (byte)led_warning (byte)dev_offset (ushort)pos (byte)temp
+                             (ushort)volt
