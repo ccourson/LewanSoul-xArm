@@ -13,42 +13,6 @@ using System.Linq;
 
 namespace xArmConsole
 {
-    public class MyDispatcherTimer : DispatcherTimer
-    {
-        public event EventHandler Tick100;
-        public event EventHandler Tick300;
-
-        long millisecondAccumulator100 = 0;
-        long millisecondAccumulator300 = 0;
-        DateTime tickTimestamp = DateTime.Now;
-
-        public MyDispatcherTimer(DispatcherPriority priority = DispatcherPriority.Normal) : base(priority)
-        {
-            Interval = new TimeSpan(0, 0, 0, 0, 1);
-            Tick += MyDispatcherTimer_Tick;
-        }
-
-        private void MyDispatcherTimer_Tick(object sender, EventArgs e)
-        {
-            DateTime now = DateTime.Now;
-            int ms = now.Subtract(tickTimestamp).Milliseconds;
-
-            if ((millisecondAccumulator100 += ms) > 100 )
-            {
-                millisecondAccumulator100 %= 100;
-                Tick100?.Invoke(this, new EventArgs() { });
-            }
-
-            if ((millisecondAccumulator300 += ms) > 300)
-            {
-                millisecondAccumulator300 %= 300;
-                Tick300?.Invoke(this, new EventArgs() { });
-            }
-
-            tickTimestamp = now;
-        }
-    }
-
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -68,13 +32,12 @@ namespace xArmConsole
 
         public MainWindow()
         {
-            new MyDispatcherTimer();
             InitializeComponent();
             InitializeDispatcherTimers();
 
             robot.OnConnected += Robot_OnConnected;
             robot.OnDisconnected += Robot_OnDisconnected;
-            robot.OnReportReceived += Robot_OnReportReceived;
+            //robot.OnReportReceived += Robot_OnReportReceived;
         }
 
         private void InitializeDispatcherTimers()
@@ -96,6 +59,22 @@ namespace xArmConsole
             dispatchTimers.ForEach(t => t.Start());
         }
 
+        private void MainWindow_16msTick(object sender, EventArgs e)
+        {
+            UpdateTickRateLabel((DispatcherTimer)sender, LabelFps);
+
+            StatusCanvas.Children.Clear();
+
+            blips.RemoveAll(l => l.X1 < 1); // Remove old blips.
+
+            foreach (var item in blips) // Slide blips over 1 pixel
+            {
+                StatusCanvas.Children.Add(item);
+                item.X1 -= 1.0;
+                item.X2 -= 1.0;
+            }
+        }
+
         private void MainWindow_300msTick(object sender, EventArgs e)
         {
             UpdateTickRateLabel((DispatcherTimer)sender, LabelPing, true);
@@ -113,35 +92,19 @@ namespace xArmConsole
             }
         }
 
-        private void MainWindow_16msTick(object sender, EventArgs e)
-        {
-            UpdateTickRateLabel((DispatcherTimer)sender, LabelFps);
-
-            StatusCanvas.Children.Clear();
-
-            blips.RemoveAll(l => l.X1 < 1); // Remove old blips.
-
-            foreach (var item in blips) // Slide blips over 1 pixel
-            {
-                StatusCanvas.Children.Add(item);
-                item.X1 -= 1.0;
-                item.X2 -= 1.0;
-            }
-        }
-
         private void UpdateTickRateLabel(DispatcherTimer dispatcherTimer, Label label, bool mode = false)
         {
             DateTime now = DateTime.Now;
-            double ms = now.Subtract((DateTime)dispatcherTimer.Tag).Milliseconds;
-            double chg = ms - Convert.ToDouble(label.Tag); // positive if shorter
-            label.Tag = Convert.ToDouble(label.Tag) + chg * (mode ? 0.2 :0.05);
+            double ms = now.Subtract((DateTime)dispatcherTimer.Tag).Milliseconds; // ms since last time
+            double diff = ms - Convert.ToDouble(label.Tag); // positive if change is shorter period
+            label.Tag = Convert.ToDouble(label.Tag) + diff * (mode ? 0.2 :0.05); // operator precidence!
             label.Content = mode ? ((double)label.Tag).ToString("N0") + "ms" : (1000.0 / (double)label.Tag).ToString("N0");
-            dispatcherTimer.Tag = now;
+            dispatcherTimer.Tag = now; // another nice place to keep private bits of data
         }
 
         private void UpdateUIAxes()
         {
-            robot.GetServoAxes(1, 2, 3, 4, 5, 6);
+            robot.GetServoAxesAsync(1, 2, 3, 4, 5, 6);
         }
 
         private void TransmitCanvasBlip(Brush brush, double amplitude, double opacity = 1)

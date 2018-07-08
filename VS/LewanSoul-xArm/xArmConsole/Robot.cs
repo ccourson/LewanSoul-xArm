@@ -48,10 +48,7 @@ namespace xArmDotNet
 
         protected void OnReport(HidReport report)
         {
-            if (!device.IsConnected)
-            {
-                return;
-            }
+            if (!device.IsConnected) { return; }
 
             if (report.ReadStatus != HidDeviceData.ReadStatus.Success)
             {
@@ -114,7 +111,7 @@ namespace xArmDotNet
         /// 
         /// </summary>
         /// <param name="servos"></param>
-        public void GetServoAxes(params int[] servos)
+        public async System.Threading.Tasks.Task GetServoAxesAsync(params int[] servos)
         {
             if (servos.Length == 0) throw new ArgumentNullException("At least one servo must be specified.");
 
@@ -123,6 +120,8 @@ namespace xArmDotNet
             dataWriter.WriteBytes(servos.Select(b => (byte)b).ToArray());
 
             SendHidReport(RobotCommand.ServoPositionRead, dataWriter.DetachBuffer());
+            var data = await device.ReadAsync(300);
+            Console.WriteLine("*** data.Status: " + data.Status.ToString());
         }
 
         // TODO: Incomplete idea.
