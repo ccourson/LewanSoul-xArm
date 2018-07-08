@@ -63,3 +63,20 @@ Parameters: **count** is the number of servos in id list. **id** is one or more 
                              (ushort)volt_max (ushort)temp_max (byte)led_status
                              (byte)led_warning (byte)dev_offset (ushort)pos (byte)temp
                              (ushort)volt
+
+## Dispatch Timers
+
+ `List<DispatcherTimer> dispatchTimers` is declared as a private property in MainWindow.cs only for possible future reference and is not used anywhere else.
+
+ `InitializeDispatcherTimers()` is declared in `MainWindow()` and initializes 16-millisecond and 300-millisecond timers.
+ 
+The *DispatcherTimer* will append up to one *Tick* to the *Interval* specified if that period exceeds one *Tick*'s period. A *Tick* seems to be about slightly faster than 1/60th of a second. Put another way, the *Tick* event will fire when the master *Tick* has occured, even if the specified period has been exceeded.
+
+#### 16msTick
+
+This timer is considered the game loop for the application and has a nominal frequency of 60Hz. It has two functions:
+
+1. Perform *scope*'s UI updates.
+2. Manage communication timing.
+
+#### 300msTick
