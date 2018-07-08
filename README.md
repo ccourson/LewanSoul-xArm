@@ -63,3 +63,15 @@ Parameters: **count** is the number of servos in id list. **id** is one or more 
                              (ushort)volt_max (ushort)temp_max (byte)led_status
                              (byte)led_warning (byte)dev_offset (ushort)pos (byte)temp
                              (ushort)volt
+
+## Dispatch Timers
+
+    `List<DispatcherTimer> dispatchTimers` is declared as a private property in MainWindow.cs only for possible future reference and is not used anywhere else.
+
+    `InitializeDispatcherTimers()` is declared in `MainWindow()` and initializes 16-millisecond and 300-millisecond timers.
+
+#### 16msTick
+
+    This timer is considered the game loop and has a nominal frequency of 60Hz.
+
+#### 300msTick
