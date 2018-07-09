@@ -74,9 +74,9 @@ The *DispatcherTimer* will append up to one *Tick* to the *Interval* specified i
 
 #### 16msTick
 
-This timer is considered the game loop for the application and has a nominal frequency of 60Hz. It has two functions:
+This timer is the game loop for the application and has a nominal frequency of 60Hz. It has two functions:
 
-1. Perform *scope*'s UI updates.
-2. Manage communication timing.
+- Perform *scope*'s UI updates.
+- Manage communication timing.
 
 #### 300msTick
