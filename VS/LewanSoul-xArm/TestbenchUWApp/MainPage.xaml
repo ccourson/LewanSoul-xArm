@@ -6,9 +6,10 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" RequestedTheme="Dark">
+    Background="#FF04080C" RequestedTheme="Dark">
 
     <Grid>
+        <Button Content="Button" HorizontalAlignment="Left" Margin="125,160,0,0" VerticalAlignment="Top" Click="Button_Click"/>
 
     </Grid>
 </Page>
