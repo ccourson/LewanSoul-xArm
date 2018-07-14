@@ -1,23 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading;
 using Windows.Devices.Enumeration;
 using Windows.Devices.HumanInterfaceDevice;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Windows.System;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -34,12 +27,28 @@ namespace TestbenchUWApp
         {
             InitializeComponent();
 
-            robot = new Robot();            
+            robot = new Robot();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            robot.SendReport();
+            MyTextBlock.Text += MyTextBox.Text + "\r\n";
+        }
+
+        private void TextBlock_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void TextBox_KeyDown(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
+        {
+            if (e.Key.Equals(VirtualKey.Enter))
+            {
+                Button_Click(sender, new RoutedEventArgs());
+                MyScrollViewer.UpdateLayout();
+                MyScrollViewer.ChangeView(0, double.MaxValue, 0);
+                e.Handled = true;
+            }
         }
     }
 
@@ -94,16 +103,11 @@ namespace TestbenchUWApp
 
         private void Device_InputReportReceived(HidDevice sender, HidInputReportReceivedEventArgs args)
         {
-            HidInputReport inputReport = args.Report;
-            IBuffer buffer = inputReport.Data;
-
-            Debug.WriteLine("HID Input Report: " + inputReport.ToString());
-            Debug.WriteLine("Total number of bytes received: " + buffer.Length.ToString());
-
-            foreach (var item in buffer.ToArray())
-            {
-                Debug.Write(string.Format("{0:X}-", item));
-            }
+            HidInputReport report = args.Report;
+            IBuffer buffer = report.Data;
+            int ms = DateTime.Now.Subtract(now).Milliseconds;
+            Debug.WriteLine("RX - {0} bytes received in {1}ms.", buffer.Length, ms);
+            Debug.WriteLine(BitConverter.ToString(report.Data.ToArray()));
         }
 
         public void Connect()
@@ -116,20 +120,35 @@ namespace TestbenchUWApp
 
         }
 
+        DateTime now;
         public async void SendReport()
         {
-            byte[] parameters = { 85, 85, 9, 23, 6, 1, 2, 3, 4, 5, 6 };
+            byte[] parameters = { 0, 85, 85, 9, (int)RobotCommand.BusServoInfoRead, 6, 1, 2, 3, 4, 5, 6 };
 
             HidOutputReport report = device.CreateOutputReport();
-            byte[] buffer = new byte[report.Data.Length];
-            buffer[0] = 0; // packet id
-            Array.Copy(parameters, 0, buffer, 1, parameters.Length);
-            DataWriter dataWriter = new DataWriter();
-            dataWriter.WriteBytes(buffer);
-            report.Data = dataWriter.DetachBuffer();
-            await device.SendOutputReportAsync(report);
+            Array.Resize(ref parameters, (int)report.Data.Length);
+            report.Data = parameters.AsBuffer();
 
-            Debug.WriteLine(buffer.Length.ToString() + " bytes sent.");
+            now = DateTime.Now;
+            await device.SendOutputReportAsync(report);
+            int ms = DateTime.Now.Subtract(now).Milliseconds;
+
+            Debug.WriteLine("TX - {0} bytes sent in {1}ms.", report.Data.Length.ToString(), ms);
+        }
+
+        internal async void SendReport(IBuffer buffer)
+        {
+            byte[] parameters = buffer.ToArray();
+
+            HidOutputReport report = device.CreateOutputReport();
+            Array.Resize(ref parameters, (int)report.Data.Length);
+            report.Data = parameters.AsBuffer();
+
+            now = DateTime.Now;
+            await device.SendOutputReportAsync(report);
+            int ms = DateTime.Now.Subtract(now).Milliseconds;
+
+            Debug.WriteLine("TX - {0} bytes sent in {1}ms.", report.Data.Length.ToString(), ms);
         }
 
         public class Parameter
@@ -138,24 +157,29 @@ namespace TestbenchUWApp
             public uint position;
         }
 
-        public enum Command
+        public enum RobotCommand
         {
-            MultiServoMove = 3,
-            ActionDownload = 5,
-            FullActionRun = 6,
-            FullActionStop = 7,
-            FullActionErase = 8,
-            ServoOffsetWrite = 12,
-            ServoOffsetRead = 13,
-            ServoOffsetAdjust = 14,
-            MultiServoUnload = 20,
-            MultiServoPosRead = 21,
-            BusServoOffsetWrite = 22,
-            BusServoOffsetRead = 23,
-            BusServoOffsetAdjust = 24,
-            BusServoMoroCtrl = 26, // ????
-            BusServoInfoWrite = 27,
-            BusServoInfoRead = 28
+            ServoMove = 3,  // (byte)count (ushort)time { (byte)id (ushort)position }
+            GroupRunRepeat = 5,  // (byte)group[255=all] (byte)times 
+            GroupRun = 6,  // (byte)group (ushort)count[0=continuous]
+            GroupStop = 7,  // -none-
+            GroupErase = 8,  // (byte)group[255=all]
+            GroupSpeed = 11, // (byte)group (ushort)percentage
+            xServoOffsetWrite = 12,
+            xServoOffsetRead = 13,
+            xServoOffsetAdjust = 14,
+            GetBatteryVoltage = 15, // -none-; (ushort)millivolts
+            ServoOff = 20, // (byte)count { (byte)id }
+            ServoPositionRead = 21, // (byte)count { (byte)id }; (byte)count { (byte)id (byte)offset }
+            ServoPositionWrite = 22, // (byte)count { (byte)id }
+            ServoOffsetRead = 23, // (byte)count { (byte)id }; (byte)count { (byte)id (byte)offset }
+            ServoOffsetWrite = 24, // (byte)id (ushort)value
+            BusServoMoroCtrl = 26, // (byte)id (byte)??? (ushort)speed
+            BusServoInfoWrite = 27, // (byte)id (ushort)pos_min (ushort)pos_max (ushort)volt_min (ushort)volt_max
+                                    //         (ushort)temp_max (byte)led_status (byte)led_warning
+            BusServoInfoRead = 28  // -none-; (byte)id (ushort)pos_min (ushort)pos_max (ushort)volt_min (ushort)volt_max 
+                                   //         (ushort)temp_max (byte)led_status (byte)led_warning (byte)dev_offset
+                                   //         (ushort)pos (byte)temp (ushort)volt
         }
     }
 }
