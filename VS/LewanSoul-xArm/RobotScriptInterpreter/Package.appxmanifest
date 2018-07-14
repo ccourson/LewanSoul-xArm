@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5" 
+  xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4" 
+  xmlns:iot2="http://schemas.microsoft.com/appx/manifest/iot/windows10/2" 
+  IgnorableNamespaces="uap mp uap5 iot2 desktop4">
+
+  <Identity
+    Name="92d29453-d9eb-42fb-a862-1a58ac8840eb"
+    Publisher="CN=ChrisCourson"
+    Version="1.0.0.0" />
+
+  <mp:PhoneIdentity PhoneProductId="92d29453-d9eb-42fb-a862-1a58ac8840eb" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+
+  <Properties>
+    <DisplayName>Robot Script Interpreter</DisplayName>
+    <PublisherDisplayName>Chris Courson</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
+
+  <Applications>
+    <Application 
+      Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="RobotScriptInterpreter.Program"
+      desktop4:SupportsMultipleInstances="true" 
+      desktop4:Subsystem="console" 
+      iot2:SupportsMultipleInstances="true" 
+      iot2:Subsystem="console">
+
+      <uap:VisualElements
+        DisplayName="Robot Script Interpreter"
+        Square150x150Logo="Assets\Square150x150Logo.png" 
+        Square44x44Logo="Assets\Square44x44Logo.png" 
+        Description="Robot Script Interpreter" BackgroundColor="transparent">
+        <uap:DefaultTile 
+          Wide310x150Logo="Assets\Wide310x150Logo.png" 
+          Square310x310Logo="Assets\Square310x310Logo.png" 
+          Square71x71Logo="Assets\Square71x71Logo.png">
+        </uap:DefaultTile>
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+
+      <Extensions>
+        <uap5:Extension 
+          Category="windows.appExecutionAlias" 
+	        Executable="RobotScriptInterpreter.exe" 
+          EntryPoint="RobotScriptInterpreter.Program">
+          <uap5:AppExecutionAlias desktop4:Subsystem="console">
+            <uap5:ExecutionAlias Alias="rsi.exe" />
+          </uap5:AppExecutionAlias>
+        </uap5:Extension>
+      </Extensions>
+
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <DeviceCapability Name="humaninterfacedevice">
+      <!--LewanSoul xArm - Device Manager: "HID-compliant bar code badge reader"-->
+      <Device Id="vidpid:0483 5750">
+        <Function Type="usage:008C 0001" />
+      </Device>
+    </DeviceCapability>
+  </Capabilities>
+</Package>
