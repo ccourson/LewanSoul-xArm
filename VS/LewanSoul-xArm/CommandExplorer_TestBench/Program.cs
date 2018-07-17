@@ -79,7 +79,7 @@ namespace CommandExplorer_TestBench
 
         private static void Device_Inserted()
         {
-            Debug.WriteLine("xArm inserted.");RobotCommand.
+            Debug.WriteLine("xArm inserted.");
         }
     }
 
