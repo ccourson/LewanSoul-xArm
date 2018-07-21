@@ -38,10 +38,10 @@ namespace CommandExplorer_TestBench
                     bw.Write((ushort)0x5555);
 
                     bw.Write((byte)5);
-                    bw.Write((byte)24);
+                    bw.Write((byte)6);
 
-                    bw.Write((byte)1);
-                    bw.Write((short)-100);
+                    bw.Write((byte)0);
+                    bw.Write((ushort)2);
                 }
 
                 device.Write(buffer, (success) => { Debug.WriteLine(success ? "Report sent." : "Read timeout."); }, 300);

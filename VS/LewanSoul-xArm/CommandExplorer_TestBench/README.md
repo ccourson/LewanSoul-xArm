@@ -68,7 +68,7 @@ Positions 1 to 6 servos over a duration of milliseconds. ServoMove does not retu
     GroupStop            7  07 -none-
     GroupErase           8  08 (byte)group[255=all]; [empty response]
                             
-    GroupSpeed          11  0b (byte)group (ushort)percentage
+    GroupSpeed          11  0b (byte)group[255=all] (ushort)percentage
                             
     GetBatteryVoltage   15  0f -none-; (ushort)millivolts
                             
