@@ -3,11 +3,13 @@ using System.Diagnostics;
 using System.Linq;
 using Windows.Storage.Streams;
 using HidLibrary;
+using System.Collections.Generic;
 
 namespace xArmDotNet
 {
     public class Robot
     {
+        private const int Timeout = 300;
         public ushort vendorId = 0x0483;
         public ushort productId = 0x5750;
         public ushort usagePage = 0x008C;   // not used
@@ -17,7 +19,6 @@ namespace xArmDotNet
 
         public static HidDevice device = null;
 
-        public event EventHandler<OnReportReceivedEventArgs> OnReportReceived;
         public event EventHandler OnConnected;
         public event EventHandler OnDisconnected;
 
@@ -28,7 +29,7 @@ namespace xArmDotNet
         }
 
         public void Connect()
-        {           
+        {
             if (device == null)
             {
                 device = HidDevices.Enumerate(vendorId, productId).FirstOrDefault();
@@ -38,28 +39,10 @@ namespace xArmDotNet
                     device.OpenDevice(DeviceMode.Overlapped, DeviceMode.Overlapped, ShareMode.ShareRead | ShareMode.ShareWrite);
                     device.Inserted += DeviceAttachedHandler;
                     device.Removed += DeviceRemovedHandler;
-
                     device.MonitorDeviceEvents = true;
-
                     Debug.WriteLine("HidLibrary installed.");
                 }
             }
-        }
-
-        protected void OnReport(HidReport report)
-        {
-            if (!device.IsConnected) { return; }
-
-            if (report.ReadStatus != HidDeviceData.ReadStatus.Success)
-            {
-
-            }
-
-            //Debug.WriteLine(report.GetBytes().Length.ToString() + " bytes received. Status: " + report.ReadStatus.ToString() + " ID: " + report.ReportId + " Data: " + BitConverter.ToString(report.Data));
-
-            OnReportReceived?.Invoke(this, new OnReportReceivedEventArgs() { Data = report.Data });
-
-            device.ReadReport(OnReport);
         }
 
         private void DeviceRemovedHandler()
@@ -71,7 +54,6 @@ namespace xArmDotNet
         private void DeviceAttachedHandler()
         {
             OnConnected?.Invoke(this, EventArgs.Empty);
-            device.ReadReport(OnReport);
             Debug.WriteLine("Robot connected.");
         }
 
@@ -80,7 +62,7 @@ namespace xArmDotNet
             DataWriter dataWriter = new DataWriter();
             dataWriter.WriteByte(0);        // packet id
             dataWriter.WriteUInt16(0x5555); // header
-            dataWriter.WriteByte((byte)(parameters.Length + 5));
+            dataWriter.WriteByte((byte)(parameters.Length + 3));
             dataWriter.WriteByte((byte)command);
             dataWriter.WriteBuffer(parameters);
 
@@ -89,39 +71,53 @@ namespace xArmDotNet
             byte[] bytes = new byte[buffer.Length];
             DataReader.FromBuffer(buffer).ReadBytes(bytes);
 
-            device.Write(bytes, 10);
+            device.Write(bytes, SendHidReport_WriteCallback, 10);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="servos"></param>
-        public void GetServoOffsets(params int[] servos)
+        private void SendHidReport_WriteCallback(bool success)
         {
-            if (servos.Length == 0) throw new ArgumentNullException("At least one servo must be specified.");
-
-            DataWriter dataWriter = new DataWriter();
-            dataWriter.WriteByte((byte)servos.Length);         
-            dataWriter.WriteBytes(servos.Select(b => (byte)b).ToArray());
-
-            SendHidReport(RobotCommand.ServoOffsetRead, dataWriter.DetachBuffer());
+            if(!success)
+            {
+                Console.WriteLine("SendHidReport fail!");
+            }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="servos"></param>
-        public async System.Threading.Tasks.Task GetServoAxesAsync(params int[] servos)
+        public void GetServoOffsets(int[] servos, ReadCallback callback = null)
         {
-            if (servos.Length == 0) throw new ArgumentNullException("At least one servo must be specified.");
-
             DataWriter dataWriter = new DataWriter();
             dataWriter.WriteByte((byte)servos.Length);
-            dataWriter.WriteBytes(servos.Select(b => (byte)b).ToArray());
+            dataWriter.WriteBytes(servos.Select(i => (byte)i).ToArray());
+
+            SendHidReport(RobotCommand.ServoOffsetRead, dataWriter.DetachBuffer());
+            device.Read(callback, Timeout);
+        }
+
+        public void GetServoPositions(int[] servos, ReadCallback callback = null)
+        {
+            DataWriter dataWriter = new DataWriter();
+            dataWriter.WriteByte((byte)servos.Length);
+            dataWriter.WriteBytes(servos.Select(i => (byte)i).ToArray());
 
             SendHidReport(RobotCommand.ServoPositionRead, dataWriter.DetachBuffer());
-            var data = await device.ReadAsync(300);
-            Console.WriteLine("*** data.Status: " + data.Status.ToString());
+            device.Read(callback, Timeout);
+        }
+
+        public void SetServoPositions(ushort?[] positions, ReadCallback callback = null)
+        {
+            Console.WriteLine("SetServoPositions");
+            DataWriter dataWriter = new DataWriter() { ByteOrder = ByteOrder.LittleEndian };
+            double c = positions.Count(d => d != null);
+            dataWriter.WriteByte((byte)c);
+
+            byte i = 1;
+            foreach (var item in positions.Where(d => d != null))
+            {
+                dataWriter.WriteByte(i++);
+                dataWriter.WriteUInt16((ushort)item);
+            }
+
+            SendHidReport(RobotCommand.ServoPositionWrite, dataWriter.DetachBuffer());
+            //device.Read(callback, Timeout);
         }
 
         // TODO: Incomplete idea.
