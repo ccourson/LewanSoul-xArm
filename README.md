@@ -1,6 +1,6 @@
 # LewanSoul-xArm
 
-The xArm has three means of communications.
+The xArm has three means of communication.
 
 1. HID-USB
 2. TTL serial 9600 BAUD
