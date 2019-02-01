@@ -1,6 +1,10 @@
 # LewanSoul-xArm
 
-## Objective
+The xArm has three means of communications.
+
+1. HID-USB
+2. TTL serial 9600 BAUD
+3. Game Controller which appearently does not function even though the controller and adapter are provided.
 
 ## USB Communications
 
