@@ -1,0 +1,121 @@
+﻿<UserControl x:Name="AxisControl" x:Class="xArmConsole.RobotAxisControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:xArmConsole"
+             mc:Ignorable="d" Width="100" Height="425">
+
+    <Grid Width="100">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40*"/>
+            <RowDefinition Height="65*"/>
+            <RowDefinition Height="172*"/>
+            <RowDefinition Height="63*"/>
+            <RowDefinition Height="35*"/>
+            <RowDefinition Height="50*"/>
+        </Grid.RowDefinitions>
+        <TextBox x:Name="textboxAngle" Text="{Binding Value, ElementName=sliderAngle}" 
+                 HorizontalAlignment="Center" 
+                 VerticalAlignment="Center" 
+                 HorizontalContentAlignment="Center" 
+                 VerticalContentAlignment="Center" 
+                 FontSize="12" 
+                 Width="50" 
+                 Height="25" 
+                 KeyDown="TextBox_KeyDown" 
+                 GotFocus="TextBox_GotFocus" 
+                 Background="Black" 
+                 Margin="25,7.5" >
+            <TextBox.BorderBrush>
+                <SolidColorBrush Color="{DynamicResource WindowBorder}"/>
+            </TextBox.BorderBrush>
+            <TextBox.Foreground>
+                <SolidColorBrush Color="{DynamicResource WindowForeground}"/>
+            </TextBox.Foreground>
+        </TextBox>
+
+        <Button Grid.Row="1" 
+                Content="p" 
+                FontSize="36" 
+                Click="ButtonUp_Click" 
+                FontFamily="Wingdings 3"
+                Style="{DynamicResource ButtonStyle1}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="55" Height="55" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="22.5,5"/>
+
+        <Slider Grid.Row="2" 
+                x:Name="sliderAngle"  
+                Margin="41,10" 
+                Orientation="Vertical"
+                HorizontalAlignment="Center" 
+                Maximum="1000" 
+                Value="500" 
+                SmallChange="1" 
+                LargeChange="100" 
+                ValueChanged="Slider_ValueChanged" 
+                MouseDoubleClick="Slider_MouseDoubleClick" 
+                RenderTransformOrigin="0.5,0.5" 
+                Style="{DynamicResource SliderStyle1}" Width="18">
+
+            <Slider.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleX="2"/>
+                    <SkewTransform/>
+                    <RotateTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Slider.RenderTransform>
+        </Slider>
+
+        <Button Grid.Row="3" 
+                Content="q" 
+                FontSize="36" 
+                Click="ButtonDown_Click" 
+                FontFamily="Wingdings 3" 
+                Style="{DynamicResource ButtonStyle1}" Width="55" Height="55" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="0" Margin="22.5,4.001,22.5,3.999"/>
+
+        <TextBox Grid.Row="4" 
+                 x:Name="textboxOffset" 
+                 TextWrapping="Wrap" 
+                 Text="{Binding Value, ElementName=sliderOffset}" 
+                 HorizontalContentAlignment="Center" 
+                 VerticalContentAlignment="Center" 
+                 FontSize="10"  
+                 KeyDown="TextBox_KeyDown" 
+                 VerticalAlignment="Center" 
+                 HorizontalAlignment="Center" 
+                 Width="30" Height="20" Margin="35,7.497,35,7.503">
+            <TextBox.Foreground>
+                <SolidColorBrush Color="{DynamicResource WindowForeground}"/>
+            </TextBox.Foreground>
+            <TextBox.Background>
+                <SolidColorBrush Color="{DynamicResource WindowEditableBackground}"/>
+            </TextBox.Background>
+            <TextBox.BorderBrush>
+                <SolidColorBrush Color="{DynamicResource WindowBorder}"/>
+            </TextBox.BorderBrush>
+        </TextBox>
+
+        <Slider Grid.Row="5" 
+                x:Name="sliderOffset" 
+                Minimum="-128" 
+                Maximum="128" 
+                LargeChange="10" 
+                SmallChange="1" 
+                ValueChanged="Slider_ValueChanged" 
+                MouseDoubleClick="Slider_MouseDoubleClick" 
+                Margin="5,8,5,0" 
+                VerticalAlignment="Top"
+                Style="{DynamicResource SliderStyle1}" 
+                RenderTransformOrigin="0.5,0.5" 
+                Height="18">
+            <Slider.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleY="1.5"/>
+                    <SkewTransform/>
+                    <RotateTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Slider.RenderTransform>
+        </Slider>
+    </Grid>
+</UserControl>
