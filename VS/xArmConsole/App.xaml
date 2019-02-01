@@ -1,0 +1,27 @@
+﻿<Application x:Class="xArmConsole.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:xArmConsole"
+             StartupUri="MainWindow.xaml">
+    
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/MySliderStyle.xaml"/>
+                <ResourceDictionary Source="Themes/MyButtonStyle.xaml"/>
+                <ResourceDictionary Source="Themes/MyTabControlStyle.xaml"/>
+                <ResourceDictionary Source="Themes/MyTabItemStyle.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            
+            <Color x:Key="WindowBackground">#FF0F0F0F</Color>
+            <Color x:Key="WindowForeground">#FFBBBBBB</Color>
+            <Color x:Key="WindowBorder">#FF555555</Color>
+            <Color x:Key="WindowEditableBackground">Black</Color>
+            <Color x:Key="WindowHeaderForeground">#FF3399FF</Color>
+            <Color x:Key="ButtonBackgroundColor">#FF323232</Color>
+            <Color x:Key="WindowHighlight">#FF616161</Color>
+            <Color x:Key="BlockBackground">#FF191919</Color>
+            
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
