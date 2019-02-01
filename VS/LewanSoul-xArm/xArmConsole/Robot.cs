@@ -130,7 +130,7 @@ namespace xArmDotNet
 
     public enum RobotCommand
     {
-        ServoMove =             3,  // (byte)count (ushort)time { (byte)id (ushort)position }
+        MultiServoMove =        3,  // (byte)count (ushort)time { (byte)id (ushort)position }
         GroupRunRepeat =        5,  // (byte)group[255=all] (byte)times 
         GroupRun =              6,  // (byte)group (ushort)count[0=continuous]
         GroupStop =             7,  // -none-
