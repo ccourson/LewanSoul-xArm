@@ -60,6 +60,8 @@ Parameters: **count** is the number of servos in id list. **id** is one or more 
     ServoOffsetRead      23  (byte)count { (byte)id }; (byte)count { (byte)id (sbyte)offset }
     ServoOffsetWrite     24  (byte)id (sbyte)offset
     BusServoMoroCtrl     26  (byte)id (byte)??? (ushort)speed
+    
+    **These commands will affect all attached servos. Use these commands with only one servi attached.**
     BusServoInfoWrite    27  (byte)id (ushort)pos_min (ushort)pos_max (ushort)volt_min
                              (ushort)volt_max (ushort)temp_max (byte)led_status
                              (byte)led_warning
