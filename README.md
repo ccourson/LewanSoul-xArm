@@ -70,6 +70,19 @@ Parameters: **count** is the number of servos in id list. **id** is one or more 
                              (byte)led_warning (byte)dev_offset (ushort)pos (byte)temp
                              (ushort)volt
 
+
+#### BusServoInfoRead
+
+BusServoInfoWrite affects all servos attached. Each servo must be programmed individually with the BusServoInfoWrite command. Reading info from the servos must also be performed individually.
+
+Temperature range 50C to 100C in 1C increments. Default is 85C. The 16-bit field value is expressed in Centigrade.
+
+Voltage range 4.5V to 12V in 0.1V increments. Default is 4.5V(min) and 12V(max). The 16-bit field value is expressed in millivolts, 4500mV(min) and 12000mV(max).
+
+I have not tested it but I believe the ServoOff command will toggle the servo on and off and any servo movement command will turn it on if it was off.
+
+# Ignore the following for now.
+
 ## Dispatch Timers
 
  `List<DispatcherTimer> dispatchTimers` is declared as a private property in MainWindow.cs only for possible future reference and is not used anywhere else.
